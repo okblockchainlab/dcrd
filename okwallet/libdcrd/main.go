@@ -37,11 +37,20 @@ func getAddressByPrivateKeyExecute(env *C.JNIEnv, netType string, args []string)
 }
 
 func createRawTransactionExecute(env *C.JNIEnv, netType string, args []string) C.jobjectArray {
-	if len(args) != 4 {
+	if len(args) < 2 || len(args) > 4 {
 		return setErrorResult(env, "error: "+CREATE_RAW_TRANSACTION_CMD+" wrong argument count")
 	}
 
-	rawTx, err := okwallet.CreateRawTransaction(netType, args[0], args[1], args[2], args[3])
+	var lockTime, expiry string
+	switch len(args) {
+	case 4:
+		expiry = args[3]
+		fallthrough
+	case 3:
+		lockTime = args[2]
+	}
+
+	rawTx, err := okwallet.CreateRawTransaction(netType, args[0], args[1], lockTime, expiry)
 	if err != nil {
 		return setErrorResult(env, "error: "+err.Error())
 	}
@@ -68,8 +77,8 @@ func SignRawTransactionExecute(env *C.JNIEnv, netType string, args []string) C.j
 	return result
 }
 
-//export Java_com_okcoin_vault_jni_sia_Siaj_execute
-func Java_com_okcoin_vault_jni_sia_Siaj_execute(env *C.JNIEnv, _ C.jclass, netTypej C.jstring, jcommand C.jstring) C.jobjectArray {
+//export Java_com_okcoin_vault_jni_dcrd_Dcrdj_execute
+func Java_com_okcoin_vault_jni_dcrd_Dcrdj_execute(env *C.JNIEnv, _ C.jclass, netTypej C.jstring, jcommand C.jstring) C.jobjectArray {
 	netType, err := jstring2string(env, netTypej)
 	if err != nil {
 		return setErrorResult(env, "error: "+err.Error())
